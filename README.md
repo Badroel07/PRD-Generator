@@ -1,6 +1,6 @@
 # PRD Generator Skill
 
-> Generate comprehensive Product Requirements Documents (PRD) with a structured 7-section format, plus companion TODO list, Implementation Prompt, and UI/UX Reference Prompt.
+> Generate comprehensive Product Requirements Documents (PRD) with a structured 7-section format, plus companion TODO list and Implementation Prompt.
 
 ## What it does
 
