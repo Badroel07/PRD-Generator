@@ -1,139 +1,146 @@
 ---
 name: prd-generator
-description: Generate comprehensive Product Requirements Documents (PRD) following a standardized 7-section structure (Overview, Requirements, Core Features, User Flow, Architecture, Database Schema, Design & Technical Constraints) PLUS three companion deliverables — a sprint-based TODO List, a self-contained Implementation Prompt for coding agents, and a UI/UX Reference Prompt for design specs. BEFORE generating, runs a mandatory Pre-Planning Interview using the available structured question tool to resolve ambiguities (missing UI reference, incomplete feature list, unspecified tech stack, undefined roles, unclear business rules) — loops with no fixed round limit until planning is unambiguous or the user opts out ("skip interview" / "langsung generate"). Trigger on /prd, /prd-generator, /buat-prd, /generate-prd, or any request for a PRD, product requirements document, detailed product specs, implementation prompt, UI/UX prompt, or design reference.
+description: 'Generate comprehensive Product Requirements Documents (PRD) following a standardized 7-section structure (Overview, Requirements, Core Features, User Flow, Architecture, Database Schema, Design & Technical Constraints) PLUS two companion deliverables — a 2-phase TODO List (Phase 1: frontend-only with mock data for a fast prototype, mandatory user-approval checkpoint, then Phase 2: backend implementation replacing the mock data) and a self-contained Implementation Prompt enforcing the same phase gate. BEFORE generating, runs a mandatory Pre-Planning Interview via the available structured question tool to resolve ambiguities (feature list, tech stack, roles, business rules). For UI projects, asks if the user has a design reference — if not, offers curated presets. Loops until unambiguous or the user opts out ("skip interview"). Trigger on /prd, /prd-generator, /generate-prd, or requests for a PRD, requirements document, product specs, or implementation prompt.'
 ---
 
 # PRD Generator Skill
 
-Skill ini memandu AI Agent untuk membuat **Product Requirements Document (PRD)** yang sangat terstruktur, profesional, dan akurat dalam Bahasa Indonesia, plus 3 file pendamping siap-eksekusi.
+This skill guides AI Agents to produce a **highly structured, professional, and accurate Product Requirements Document (PRD)** in English, plus 2 ready-to-execute companion files.
 
-**File ini adalah peta jalan (routing layer).** Detail lengkap tiap tahap ada di folder `references/` — baca file yang relevan tepat sebelum kamu butuh, jangan generate dari ingatan/tebakan.
+**This file is the routing layer.** Full details for each stage live in the `references/` folder — read the relevant file right before you need it; do not generate from memory or guesswork.
 
 ```
 prd-generator/
-├── SKILL.md                                    (kamu di sini)
+├── SKILL.md                                    (you are here)
 └── references/
-    ├── interview-guide.md                      (Tahap 0 — tier pertanyaan lengkap)
-    ├── prd-format.md                            (Tahap 1 — template 7-bagian PRD)
-    ├── todo-template.md                         (Tahap 2 — Lampiran A)
-    ├── implementation-prompt-template.md        (Tahap 2 — Lampiran B)
-    └── uiux-prompt-template.md                  (Tahap 2 — Lampiran C)
+    ├── interview-guide.md                      (Stage 0 — full question tier list)
+    ├── prd-format.md                           (Stage 1 — 7-section PRD template)
+    ├── todo-template.md                        (Stage 2 — Appendix A)
+    ├── implementation-prompt-template.md       (Stage 2 — Appendix B)
+    └── design-system-presets.md                (Stage 0 — fallback UI/UX presets)
 ```
 
 ---
 
-## Slash Commands & Trigger
+## Slash Commands & Triggers
 
-Skill ini otomatis dipicu ketika user mengetik perintah slash atau kata kunci berikut:
-- `/prd`, `/prd-generator`, `/buat-prd`, `/generate-prd`
-- Frasa seperti *"buatkan PRD"*, *"buat PRD"*, *"generate PRD"*, *"PRD document"*, *"implementation prompt"*, *"prompt implementasi"*, *"UI/UX prompt"*, *"design prompt"*, *"prompt desain"*, dll.
+This skill is automatically triggered when the user types any of the following slash commands or keywords:
+- `/prd`, `/prd-generator`, `/generate-prd`, `/buat-prd`
+- Phrases like *"generate PRD"*, *"create PRD"*, *"build a PRD"*, *"PRD document"*, *"requirements document"*, *"product specs"*, *"implementation prompt"*, etc.
 
 ---
 
-## 📦 Output Deliverables (4 File Wajib)
+## 📦 Output Deliverables (3 Mandatory Files)
 
-Setiap kali skill ini dipicu, agent WAJIB menghasilkan **4 file markdown** di folder yang sama:
+Every time this skill is triggered, the agent MUST produce **3 markdown files** in the same folder:
 
-| File | Isi | Wajib? |
+| File | Contents | Required? |
 | :--- | :--- | :--- |
-| `[Nama-Proyek]-PRD.md` | Product Requirements Document (7 section) | ✅ Selalu |
-| `[Nama-Proyek]-TODO.md` | Task list sprint-based dengan checkbox | ✅ Selalu |
-| `[Nama-Proyek]-IMPLEMENTATION-PROMPT.md` | Prompt siap-paste ke coding agent | ✅ Untuk proyek teknis |
-| `[Nama-Proyek]-UIUX-PROMPT.md` | Prompt referensi UI/UX untuk design spec | ✅ Untuk proyek dengan UI |
+| `[Project-Name]-PRD.md` | Product Requirements Document (7 sections) | ✅ Always |
+| `[Project-Name]-TODO.md` | Task list **2 phases**: Phase 1 (Frontend-Only, mock data) → Approval checkpoint → Phase 2 (Backend) | ✅ Always |
+| `[Project-Name]-IMPLEMENTATION-PROMPT.md` | Prompt ready to paste into a coding agent | ✅ For technical projects |
 
-Keempat file **SINKRON** — nomor task di TODO harus sama dengan referensi di Implementation Prompt dan UI/UX Prompt.
+All three files are **SYNCHRONIZED** — task numbers in the TODO must match the references in the Implementation Prompt.
 
-**Pengecualian**:
-- **Implementation Prompt**: Lewati hanya jika proyek non-teknis (proses bisnis, SOP, content strategy) atau user minta tanpa prompt.
-- **UI/UX Prompt**: Lewati hanya jika proyek **tanpa UI** (API service, CLI tool, backend-only, data pipeline) atau user minta tanpa prompt UI/UX.
+**Exceptions**:
+- **Implementation Prompt**: Skip only if the project is non-technical (business process, SOP, content strategy) or the user explicitly asks for no prompt.
+- **2-Phase Structure**: Skip (use regular priority grouping instead) only if the project has no UI, or the frontend consumes an existing external API (no custom backend to build).
 
----
-
-## 🚦 Tahap 0: Pre-Planning Interview (WAJIB SEBELUM GENERATE)
-
-> 📖 **Baca `references/interview-guide.md` sebelum mulai** — berisi daftar lengkap pertanyaan per tier (1–4), template pesan pembuka, dan contoh flow end-to-end.
-
-Sebelum mulai nulis PRD, agent WAJIB menjalani **Pre-Planning Interview** untuk ngilangin ambiguitas. Interview loop terus (tidak ada batas jumlah *ronde*) sampai salah satu dari 2 kondisi berikut terpenuhi:
-
-1. **Tidak ada lagi ambiguitas kritis** yang tersisa → lanjut ke Tahap 1.
-2. **User explicit opt-out** (*"skip interview"*, *"cukup"*, *"langsung generate"*, *"pakai default saja"*) → dokumentasikan semua asumsi di section **"Catatan & Asumsi"** PRD, lalu lanjut ke Tahap 1.
-
-> **Hard rule**: Agent **TIDAK BOLEH** berhenti hanya karena info yang dikumpulkan "sebagian besar sudah ada". Bertanya terus lebih baik daripada PRD yang isinya banyak asumsi keliru.
-
-### Apa yang dianggap "ambigu" (wajib diklarifikasi)?
-
-Ketiadaan info berikut akan memaksa agent mengambil keputusan yang **materially mengubah** scope/tech stack/architecture/feature set:
-
-- Nama produk/aplikasi · Domain industri · Platform target (web/mobile/desktop/CLI/API) · User & role/permission
-- List fitur MVP · Referensi UI/UX (Figma, mockup, brand kit) · Tech stack krusial · Workflow/business rule khusus
-- Integrasi eksternal · Deployment target · Compliance/security (kalau industri mengharuskan) · Bahasa output PRD · Auth method
-
-Yang **TIDAK** perlu ditanya (boleh pakai default): typography minor, icon library, sprint timeline detail, naming convention, state management library, test framework — semua ini agent putuskan sendiri sesuai best practice framework.
-
-### Cara Bertanya
-
-- **WAJIB pakai structured question tool** yang tersedia di environment (mis. `ask_user_input_v0`) — **BUKAN** tanya di plain text chat.
-- **Cek dulu skema/batas tool tersebut** sebelum generate batch pertanyaan (jumlah pertanyaan per call & jumlah opsi per pertanyaan bisa beda-beda tergantung tool/environment — jangan asumsikan angka tetap).
-- 2–4 opsi konkret per pertanyaan, mutually exclusive, level abstraksi sama.
-- Kalau tool tidak punya tombol opsi bebas ("Lainnya"), user tetap bisa ngetik jawaban custom di pesan balasan — agent WAJIB terima itu sebagai jawaban valid.
-- **Loop sampai clear**: tiap batch jawaban dievaluasi ulang. Kalau masih ada ambiguitas kritis → batch berikutnya.
-- **JANGAN** ulangi pertanyaan yang sudah terjawab, dan **JANGAN** tanya detail kosmetik.
-- Bertanya **per tier** (Tier 1 → 4), boleh skip tier kalau sudah jelas, boleh re-batch lintas tier untuk efisiensi.
-
-### Sebelum generate: tampilkan ringkasan + konfirmasi final
-
-Begitu tidak ada ambiguitas kritis tersisa (atau user opt-out), tampilkan **ringkasan asumsi terkonfirmasi** dan tanya 1 pertanyaan terakhir (binary): *"Lanjut generate dengan info ini?"* — baru masuk ke Tahap 1.
+> This skill **does not produce a separate UI/UX Reference Prompt file**. For projects with a UI, the interview asks whether the user has a design reference — if yes, it's used; if not, the agent offers several ready-to-use design system presets. The result goes directly into PRD Section 7 ("Design & Technical Constraints"). The sub-flow details are in `references/interview-guide.md`; the preset list is in `references/design-system-presets.md`.
 
 ---
 
-## 🧱 Tahap 1: Generate PRD (7 Bagian)
+## 🚦 Stage 0: Pre-Planning Interview (MANDATORY BEFORE GENERATION)
 
-> 📖 **Baca `references/prd-format.md` sebelum generate** — berisi template markdown presisi, contoh Mermaid diagram (`graph TD` untuk Architecture, `erDiagram` untuk Database Schema), dan aturan Typography.
+> 📖 **Read `references/interview-guide.md` before starting** — it contains the full question list per tier (1–4), the user-question tool usage rules, the loop & termination logic, and a sample end-to-end flow.
 
-Setiap PRD HARUS punya 7 bagian ini, lengkap dan terisi detail — jangan mengurangi atau melompati bagian manapun:
+Before writing the PRD, the agent MUST run a **Pre-Planning Interview** to eliminate ambiguity. The interview loops continuously (no round limit) until one of these 2 conditions is met:
 
-1. **Overview** — latar belakang masalah + tujuan utama aplikasi
-2. **Requirements** — aksesibilitas, pengguna, data input, notifikasi
-3. **Core Features** — daftar fitur MVP
-4. **User Flow** — langkah demi langkah alur kerja pengguna
-5. **Architecture** — diagram Mermaid `graph TD` + deskripsi komponen
-6. **Database Schema** — diagram Mermaid `erDiagram` + ringkasan tabel
+1. **No critical ambiguities remain** → proceed to Stage 1.
+2. **User explicit opt-out** (*"skip interview"*, *"enough"*, *"just generate"*, *"use defaults"*) → document all assumptions in the PRD's **"Notes & Assumptions"** section, then proceed to Stage 1.
+
+> **Hard rule**: The agent **MUST NOT** stop just because the info gathered is "mostly there." Keep asking — a PRD full of wrong assumptions is worse than a slightly longer interview.
+
+### What counts as "ambiguous" (mandatory clarification)?
+
+Missing any of the following would force the agent to make decisions that **materially change** the scope, tech stack, architecture, or feature set:
+
+- Product/app name · Industry domain · Target platform (web/mobile/desktop/CLI/API) · Users & roles/permissions
+- MVP feature list · Critical tech stack · Special workflow/business rules
+- External integrations · Deployment target · Compliance/security (when industry requires it) · PRD output language · Auth method
+
+What does **NOT** need to be asked (agent may use defaults):
+- Minor typography details, icon libraries, sprint timeline details, naming conventions, state management library, test framework — the agent decides all of these based on framework best practices.
+
+### How to Ask
+
+- **MUST use the structured question tool** available in the environment (e.g. `ask_user_input_v0`) — **NOT** plain text chat questions.
+- **Check the tool's schema/limits first** before generating a batch (max questions per call & max options per question may vary by tool/environment — do not assume fixed numbers).
+- 2–4 concrete, mutually exclusive options per question, all at the same abstraction level.
+- If the tool has no free-text "Other" button, the user can still type a custom answer in their next reply — the agent MUST accept that as a valid answer.
+- **Loop until clear**: re-evaluate after each batch. If critical ambiguity remains → next batch.
+- **DO NOT** repeat questions already answered, and **DO NOT** ask cosmetic details.
+- Ask **per tier** (Tier 1 → 4); skip tiers that are already clear, or re-batch across tiers for efficiency.
+
+### Before generating: show summary + final confirmation
+
+Once no critical ambiguity remains (or the user opts out), show a **summary of confirmed assumptions** and ask one last (binary) question: *"Generate with this info?"* — only then move to Stage 1.
+
+---
+
+## 🧱 Stage 1: Generate the PRD (7 Sections)
+
+> 📖 **Read `references/prd-format.md` before generating** — it contains the precise markdown template, sample Mermaid diagrams (`graph TD` for Architecture, `erDiagram` for Database Schema), and typography rules.
+
+Every PRD MUST have these 7 sections, fully filled out — do not skip or shorten any section:
+
+1. **Overview** — problem background + main product goals
+2. **Requirements** — accessibility, users, input data, notifications
+3. **Core Features** — list of MVP features
+4. **User Flow** — step-by-step user workflow
+5. **Architecture** — Mermaid `graph TD` diagram + component descriptions
+6. **Database Schema** — Mermaid `erDiagram` + table summary
 7. **Design & Technical Constraints** — tech stack, typography rules, UI/layout rules
 
-Sesuaikan isi tiap bagian dengan konteks proyek user (nama produk, domain bisnis), tapi **tetap pertahankan struktur 7 bagian** persis seperti di `prd-format.md`.
+Adapt the content of each section to the user's project context (product name, business domain), but **keep the exact 7-section structure** as defined in `prd-format.md`.
 
 ---
 
-## 🧩 Tahap 2: Generate 3 File Pendamping
+## 🧩 Stage 2: Generate the 2 Companion Files
 
-| Lampiran | File output | Reference |
+| Appendix | Output File | Reference |
 | :--- | :--- | :--- |
-| A — TODO List | `[Nama-Proyek]-TODO.md` | `references/todo-template.md` |
-| B — Implementation Prompt | `[Nama-Proyek]-IMPLEMENTATION-PROMPT.md` | `references/implementation-prompt-template.md` |
-| C — UI/UX Reference Prompt | `[Nama-Proyek]-UIUX-PROMPT.md` | `references/uiux-prompt-template.md` |
+| A — TODO List | `[Project-Name]-TODO.md` | `references/todo-template.md` |
+| B — Implementation Prompt | `[Project-Name]-IMPLEMENTATION-PROMPT.md` | `references/implementation-prompt-template.md` |
 
-Baca file reference yang sesuai **tepat sebelum generate lampiran itu** — masing-masing punya format presisi, aturan wajib, dan kapan boleh di-skip (lihat section "Kapan TIDAK Perlu..." di tiap file).
+Read the corresponding reference file **right before generating that appendix** — each has its own precise format, mandatory rules, and conditions for when it can be skipped (see "When NOT to..." in each file).
 
-**Konsistensi penomoran wajib**: Nomor task di TODO = nomor task yang dirujuk di Implementation Prompt = nomor task UI di UI/UX Prompt. Sinkronkan sebelum output final.
-
----
-
-## Petunjuk Penggunaan untuk Agent
-
-0. **🚦 WAJIB Tahap 0**: Jangan generate apa pun sebelum interview selesai/di-opt-out (lihat `references/interview-guide.md`). Kecuali user sudah kasih info super lengkap di request awal — dalam hal itu boleh skip langsung ke ringkasan asumsi + konfirmasi final.
-1. **Fleksibilitas Input**: Sesuaikan isi tiap bagian dengan detail spesifik proyek user, tapi tetap pertahankan 7 bagian PRD.
-2. **Kelengkapan**: Semua 7 bagian harus selalu ada dan terisi detail — jangan skip bagian manapun.
-3. **Mermaid Diagrams**: Gunakan sintaks Mermaid yang sah untuk Architecture (`graph TD`) dan Database Schema (`erDiagram`).
-4. **Typography Strictness**: Sertakan aturan Typography persis seperti spesifikasi di `references/prd-format.md`.
-5. **Generate 3 Companion Files (WAJIB)**: Setelah PRD selesai, selalu generate `[Nama-Proyek]-TODO.md`, `[Nama-Proyek]-IMPLEMENTATION-PROMPT.md`, dan `[Nama-Proyek]-UIUX-PROMPT.md` di folder yang sama — ikuti masing-masing reference file.
-6. **Output Ringkasan**: Di akhir output, tampilkan jumlah item TODO + distribusi HIGH/MEDIUM/LOW, jumlah task di Implementation Prompt, jumlah task UI di UI/UX Prompt, dan catatan variasi yang tersedia di kedua prompt.
-7. **Pengecualian Implementation Prompt**: Lewati Lampiran B HANYA jika proyek non-teknis ATAU user eksplisit minta tanpa prompt. Tanya konfirmasi kalau ragu.
-8. **Pengecualian UI/UX Prompt**: Lewati Lampiran C HANYA jika proyek tanpa UI ATAU user eksplisit minta tanpa design spec. Tanya konfirmasi kalau ragu.
-9. **Konsistensi Penomoran**: Sinkronkan nomor task lintas TODO / Implementation Prompt / UI/UX Prompt sebelum output final.
+**Numbering consistency is mandatory**: Task numbers in the TODO = task numbers referenced in the Implementation Prompt. Sync them before the final output.
 
 ---
 
-## 📝 Riwayat Perubahan
+## Usage Instructions for the Agent
 
-- **v1.1**: Direstrukturisasi jadi progressive disclosure (SKILL.md ringkas + `references/`) supaya lebih hemat context saat trigger. Perbaikan 2 bug karakter non-Indonesia yang nyelip (di contoh Tier 3 interview dan intro Lampiran C). Batas jumlah pertanyaan per call disesuaikan ke skema tool tanya-user yang sebenarnya tersedia (cek dulu sebelum asumsi angka tetap).
-- **v1.0**: Versi awal, 1 file monolitik (~1000 baris).
+0. **🚦 Stage 0 is MANDATORY**: Do not generate anything before the interview finishes or the user opts out (see `references/interview-guide.md`). Exception — if the user already provided a super-complete request, you may skip straight to the assumptions summary + final confirmation.
+1. **Input Flexibility**: Adapt the content of each section to the user's specific project details, but always keep the 7 PRD sections.
+2. **Completeness**: All 7 sections must always exist and be filled in detail — never skip any.
+3. **Mermaid Diagrams**: Use valid Mermaid syntax for Architecture (`graph TD`) and Database Schema (`erDiagram`).
+4. **Typography Strictness**: Include typography rules exactly as specified in `references/prd-format.md`.
+5. **Generate the 2 Companion Files (MANDATORY)**: After the PRD is done, always generate `[Project-Name]-TODO.md` and `[Project-Name]-IMPLEMENTATION-PROMPT.md` in the same folder — follow each reference file.
+6. **Output Summary**: At the end, show the TODO item count + Phase 1/Phase 2 distribution, the task count in the Implementation Prompt, and notes on the prompt variations available.
+7. **Implementation Prompt Exception**: Skip Appendix B ONLY if the project is non-technical OR the user explicitly asks for no prompt. Confirm with the user when in doubt.
+8. **Numbering Consistency**: Sync task numbers between the TODO and Implementation Prompt before final output — numbers continue from Phase 1 into Phase 2, do not reset.
+9. **UI/UX Reference (not a separate file)**: For projects with a UI, run the "UI/UX Reference" sub-flow in `references/interview-guide.md` — first ask if the user has a reference; if not, offer 4 design system presets from `references/design-system-presets.md`. The result goes into PRD Section 7, NOT a 4th file.
+10. **2-Phase Structure (MANDATORY for fullstack projects)**: The TODO and Implementation Prompt MUST be split into Phase 1 (Frontend-Only, mock data, fast prototype) → User approval checkpoint (MANDATORY) → Phase 2 (Backend, replace mock data with real integration). The Implementation Prompt MUST include explicit "stop and wait for approval" instructions at the end of Phase 1 — see `references/implementation-prompt-template.md`. Skip this structure ONLY for projects without UI, or where the frontend consumes an existing external API (see the exception in `references/todo-template.md`).
+11. **Default Execution: Full Autopilot**: The Implementation Prompt MUST explicitly state that by default the agent auto-continues task after task WITHOUT asking permission in between — progress reports are FYI, not confirmation requests. The only mandatory pause is the GATE at the end of Phase 1. Per-task confirmation mode (Pair Programming) is only active when the user explicitly opts in.
+
+---
+
+## 📝 Change History
+
+- **v1.5**: Implementation Prompt now explicitly defaults to **Full Autopilot** — the agent auto-continues task after task without asking permission in between (progress reports = FYI, not confirmation requests). The only mandatory pause remains the GATE at the end of Phase 1. Per-task confirmation mode (Pair Programming) is now opt-in, not the default.
+- **v1.4**: TODO List & Implementation Prompt restructured into **2 phases**: Phase 1 (Frontend-Only with mock data, for a fast prototype) → User approval checkpoint (MANDATORY) → Phase 2 (Backend, replace mock data with real integration). The Implementation Prompt now has an explicit GATE that forces the agent to stop & request approval at the end of Phase 1 before starting Phase 2.
+- **v1.3**: UI/UX Reference brought back, but as an **interview sub-flow** (not a separate file). The user is asked whether they have a design reference; if not, the agent offers 4 design system presets (`references/design-system-presets.md`) for selection. The result goes into PRD Section 7.
+- **v1.2**: UI/UX Reference Prompt (Appendix C) removed entirely per request — the skill now produces only 3 files (PRD, TODO, Implementation Prompt). The `references/uiux-prompt-template.md` file was removed from the package.
+- **v1.1**: Restructured into progressive disclosure (concise SKILL.md + `references/`) to save context on trigger. Fixed 2 non-Indonesian character bugs that snuck in (in a Tier 3 interview example and the Appendix C intro, before Appendix C was removed). Max questions per call adjusted to match the actual user-question tool's schema (check before assuming fixed numbers).
+- **v1.0**: Initial version, single monolithic file (~1000 lines).
