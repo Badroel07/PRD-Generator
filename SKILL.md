@@ -1,11 +1,11 @@
 ---
 name: prd-generator
-description: 'Generate comprehensive Product Requirements Documents (PRD) following a standardized 7-section structure (Overview, Requirements, Core Features, User Flow, Architecture, Database Schema, Design & Technical Constraints) PLUS two companion deliverables — a 2-phase TODO List (Phase 1: frontend-only with mock data for a fast prototype, mandatory user-approval checkpoint, then Phase 2: backend implementation replacing the mock data) and a self-contained Implementation Prompt enforcing the same phase gate. BEFORE generating, runs a mandatory Pre-Planning Interview via the available structured question tool to resolve ambiguities (feature list, tech stack, roles, business rules). For UI projects, asks if the user has a design reference — if not, offers curated presets. Loops until unambiguous or the user opts out ("skip interview"). Trigger on /prd, /prd-generator, /generate-prd, or requests for a PRD, requirements document, product specs, or implementation prompt.'
+description: 'Generate a comprehensive Product Requirements Document (PRD) following a standardized 7-section structure (Overview, Requirements, Core Features, User Flow, Architecture, Database Schema, Design & Technical Constraints), plus a self-contained implementation_prompt.md ready to paste into a coding agent. BEFORE generating, runs a mandatory Pre-Planning Interview via the available structured question tool to resolve ambiguities (feature list, tech stack, roles, business rules). For UI projects, asks if the user has a design reference — if not, offers curated presets. Loops until unambiguous or the user opts out ("skip interview"). Trigger on /prd, /prd-generator, /generate-prd, or requests for a PRD, requirements document, or product specs.'
 ---
 
 # PRD Generator Skill
 
-This skill guides AI Agents to produce a **highly structured, professional, and accurate Product Requirements Document (PRD)** in English, plus 2 ready-to-execute companion files.
+This skill guides AI Agents to produce a **highly structured, professional, and accurate Product Requirements Document (PRD)** in English, plus a ready-to-paste `implementation_prompt.md` file.
 
 **This file is the routing layer.** Full details for each stage live in the `references/` folder — read the relevant file right before you need it; do not generate from memory or guesswork.
 
@@ -15,8 +15,7 @@ prd-generator/
 └── references/
     ├── interview-guide.md                      (Stage 0 — full question tier list)
     ├── prd-format.md                           (Stage 1 — 7-section PRD template)
-    ├── todo-template.md                        (Stage 2 — Appendix A)
-    ├── implementation-prompt-template.md       (Stage 2 — Appendix B)
+    ├── implementation-prompt-template.md       (Stage 1.5 — implementation prompt file template)
     └── design-system-presets.md                (Stage 0 — fallback UI/UX presets)
 ```
 
@@ -30,21 +29,19 @@ This skill is automatically triggered when the user types any of the following s
 
 ---
 
-## 📦 Output Deliverables (3 Mandatory Files)
+## 📦 Output Deliverables (2 Files)
 
-Every time this skill is triggered, the agent MUST produce **3 markdown files** in the same folder:
+Every time this skill is triggered, the agent MUST produce:
 
-| File | Contents | Required? |
-| :--- | :--- | :--- |
-| `[Project-Name]-PRD.md` | Product Requirements Document (7 sections) | ✅ Always |
-| `[Project-Name]-TODO.md` | Task list **2 phases**: Phase 1 (Frontend-Only, mock data) → Approval checkpoint → Phase 2 (Backend) | ✅ Always |
-| `[Project-Name]-IMPLEMENTATION-PROMPT.md` | Prompt ready to paste into a coding agent | ✅ For technical projects |
+| Output | Type | Contents | Required? |
+| :--- | :--- | :--- | :--- |
+| `[Project-Name]-PRD.md` | **File** (saved to disk) | Product Requirements Document (7 sections) | ✅ Always |
+| `implementation_prompt.md` | **File** (saved beside the PRD) | Self-contained prompt ready to paste into a coding agent | ✅ For technical projects |
 
-All three files are **SYNCHRONIZED** — task numbers in the TODO must match the references in the Implementation Prompt.
+> The Implementation Prompt is always saved with the exact filename `implementation_prompt.md`, in the same directory as the PRD. Its contents must be ready to copy and paste into another chat or coding agent to execute the PRD.
 
 **Exceptions**:
 - **Implementation Prompt**: Skip only if the project is non-technical (business process, SOP, content strategy) or the user explicitly asks for no prompt.
-- **2-Phase Structure**: Skip (use regular priority grouping instead) only if the project has no UI, or the frontend consumes an existing external API (no custom backend to build).
 
 > This skill **does not produce a separate UI/UX Reference Prompt file**. For projects with a UI, the interview asks whether the user has a design reference — if yes, it's used; if not, the agent offers several ready-to-use design system presets. The result goes directly into PRD Section 7 ("Design & Technical Constraints"). The sub-flow details are in `references/interview-guide.md`; the preset list is in `references/design-system-presets.md`.
 
@@ -106,16 +103,24 @@ Adapt the content of each section to the user's project context (product name, b
 
 ---
 
-## 🧩 Stage 2: Generate the 2 Companion Files
+## 🧩 Stage 1.5: Write the Implementation Prompt File
 
-| Appendix | Output File | Reference |
-| :--- | :--- | :--- |
-| A — TODO List | `[Project-Name]-TODO.md` | `references/todo-template.md` |
-| B — Implementation Prompt | `[Project-Name]-IMPLEMENTATION-PROMPT.md` | `references/implementation-prompt-template.md` |
+> 📖 **Read `references/implementation-prompt-template.md` before generating** — it contains the precise format for `implementation_prompt.md`.
 
-Read the corresponding reference file **right before generating that appendix** — each has its own precise format, mandatory rules, and conditions for when it can be skipped (see "When NOT to..." in each file).
+After the PRD file is saved, the agent MUST write a **self-contained Implementation Prompt** to `implementation_prompt.md` beside the PRD. The user can copy this file's contents into a coding agent (Mavis, Claude Code, Cursor, Cody, or a human engineer) to execute the PRD.
 
-**Numbering consistency is mandatory**: Task numbers in the TODO = task numbers referenced in the Implementation Prompt. Sync them before the final output.
+**Output rules (MANDATORY):**
+- **Exact filename:** use `implementation_prompt.md`; do not derive a project-specific filename.
+- **Same directory:** save it next to `[Project-Name]-PRD.md` so the prompt can reliably refer to that PRD using a relative path.
+- **Prompt-only contents:** the file contains only the ready-to-paste prompt, with no explanation, save confirmation, or usage tips around it.
+
+Key characteristics of the prompt itself:
+- **Saved as a file**: written to `implementation_prompt.md`, not merely shown inline in chat.
+- **Self-contained**: the executing agent has no prior context, so the prompt must reference the PRD file path and include all important info (tech stack, working principles, execution mode, file architecture, first steps, hard limits).
+- **Default execution mode: Full Autopilot**: the agent auto-continues task after task without asking permission in between — progress reports are FYI, not confirmation requests.
+- **Mandatory approval gate after Phase 1 (Production-Grade Frontend)**: the prompt instructs the agent to build a production-grade frontend with rich, realistic synthetic data (zero demo badges/watermarks/placeholders), stop, and wait for user approval before touching any backend work.
+
+> Skip this stage only if the project is non-technical OR the user explicitly asks for no prompt.
 
 ---
 
@@ -126,21 +131,36 @@ Read the corresponding reference file **right before generating that appendix** 
 2. **Completeness**: All 7 sections must always exist and be filled in detail — never skip any.
 3. **Mermaid Diagrams**: Use valid Mermaid syntax for Architecture (`graph TD`) and Database Schema (`erDiagram`).
 4. **Typography Strictness**: Include typography rules exactly as specified in `references/prd-format.md`.
-5. **Generate the 2 Companion Files (MANDATORY)**: After the PRD is done, always generate `[Project-Name]-TODO.md` and `[Project-Name]-IMPLEMENTATION-PROMPT.md` in the same folder — follow each reference file.
-6. **Output Summary**: At the end, show the TODO item count + Phase 1/Phase 2 distribution, the task count in the Implementation Prompt, and notes on the prompt variations available.
-7. **Implementation Prompt Exception**: Skip Appendix B ONLY if the project is non-technical OR the user explicitly asks for no prompt. Confirm with the user when in doubt.
-8. **Numbering Consistency**: Sync task numbers between the TODO and Implementation Prompt before final output — numbers continue from Phase 1 into Phase 2, do not reset.
-9. **UI/UX Reference (not a separate file)**: For projects with a UI, run the "UI/UX Reference" sub-flow in `references/interview-guide.md` — first ask if the user has a reference; if not, offer 4 design system presets from `references/design-system-presets.md`. The result goes into PRD Section 7, NOT a 4th file.
-10. **2-Phase Structure (MANDATORY for fullstack projects)**: The TODO and Implementation Prompt MUST be split into Phase 1 (Frontend-Only, mock data, fast prototype) → User approval checkpoint (MANDATORY) → Phase 2 (Backend, replace mock data with real integration). The Implementation Prompt MUST include explicit "stop and wait for approval" instructions at the end of Phase 1 — see `references/implementation-prompt-template.md`. Skip this structure ONLY for projects without UI, or where the frontend consumes an existing external API (see the exception in `references/todo-template.md`).
-11. **Default Execution: Full Autopilot**: The Implementation Prompt MUST explicitly state that by default the agent auto-continues task after task WITHOUT asking permission in between — progress reports are FYI, not confirmation requests. The only mandatory pause is the GATE at the end of Phase 1. Per-task confirmation mode (Pair Programming) is only active when the user explicitly opts in.
+5. **Save 2 Files**: Save `[Project-Name]-PRD.md` and `implementation_prompt.md` in the same directory. The prompt file must contain only the completed, ready-to-paste implementation prompt.
+6. **Report Saved Files Clearly**: After writing the deliverables, give a concise confirmation that names or links both saved files. Do not duplicate the prompt inline unless the user explicitly requests it.
+7. **Implementation Prompt Exception**: Skip Stage 1.5 ONLY if the project is non-technical OR the user explicitly asks for no prompt. Confirm with the user when in doubt.
+8. **UI/UX Reference (not a separate file)**: For projects with a UI, run the "UI/UX Reference" sub-flow in `references/interview-guide.md` — first ask if the user has a reference; if not, offer 4 design system presets from `references/design-system-presets.md`. The result goes into PRD Section 7, NOT a separate file.
+9. **Default Execution: Full Autopilot**: The Implementation Prompt MUST explicitly state that by default the agent auto-continues task after task WITHOUT asking permission in between — progress reports are FYI, not confirmation requests. The only mandatory pause is the GATE after the production-grade frontend is ready for review. Per-task confirmation mode (Pair Programming) is only active when the user explicitly opts in.
+10. **Production-Grade Frontend & Approval Gate (Phase 1)**: The Implementation Prompt MUST instruct the agent to build a production-grade frontend with high-fidelity realistic synthetic data first — complete visual polish, authentic domain-accurate data, full client-side state interactivity, and ZERO "demo/prototype" gimmicks. After Phase 1 is built and committed, the agent MUST stop and wait for explicit user approval before starting Phase 2 backend work.
+11. **Zero Demo Embel-Embel & High-Fidelity Synthetic Data (MANDATORY)**: Prompts generated for coding agents must strictly ban any "Demo", "Demo Mode", "Preview", "Prototype", "Mock Data", or "Database not connected" badges, banners, alerts, or watermarks. The UI must look and feel 100% like a live production website connected to a database. Low-effort dummy placeholders (e.g. "Lorem ipsum", "John Doe", "Product 1", 2-item tables) are strictly forbidden; views must be populated with rich, domain-authentic synthetic records.
+12. **Mermaid Syntax Validation (MANDATORY before saving the PRD)**: Before saving the PRD, the agent MUST validate every raw `erDiagram` relationship line against the exact shape `ENTITY1 ||--o{ ENTITY2 : "label"`. The line must contain exactly two entity names, exactly one cardinality token, and one label at the end. Labels must never appear between entities. Each relationship must occupy one physical line; never concatenate or wrap two relationships into one line. If two foreign keys point to the same entity, emit two separate lines with role-specific labels (for example, `"from unit"` and `"to unit"`). Do not place malformed anti-patterns inside a `mermaid` code fence. Same strictness applies to Architecture `graph TD` blocks.
+13. **Mermaid Literal Scan (MANDATORY before file write)**: After drafting the Mermaid blocks, inspect the raw text between each diagram fence. Reject and rewrite any relationship line that contains a label before a second entity, more than one cardinality token, a second relationship on the same physical line, an undefined entity, or an entity name with spaces/reserved keywords. Do not save or present the PRD until this scan passes.
+14. **Implementation Prompt is a Required File**: For technical projects, the Implementation Prompt MUST be written as `implementation_prompt.md` beside the PRD. It is not sufficient to show it only in chat.
 
 ---
 
 ## 📝 Change History
 
-- **v1.5**: Implementation Prompt now explicitly defaults to **Full Autopilot** — the agent auto-continues task after task without asking permission in between (progress reports = FYI, not confirmation requests). The only mandatory pause remains the GATE at the end of Phase 1. Per-task confirmation mode (Pair Programming) is now opt-in, not the default.
-- **v1.4**: TODO List & Implementation Prompt restructured into **2 phases**: Phase 1 (Frontend-Only with mock data, for a fast prototype) → User approval checkpoint (MANDATORY) → Phase 2 (Backend, replace mock data with real integration). The Implementation Prompt now has an explicit GATE that forces the agent to stop & request approval at the end of Phase 1 before starting Phase 2.
-- **v1.3**: UI/UX Reference brought back, but as an **interview sub-flow** (not a separate file). The user is asked whether they have a design reference; if not, the agent offers 4 design system presets (`references/design-system-presets.md`) for selection. The result goes into PRD Section 7.
-- **v1.2**: UI/UX Reference Prompt (Appendix C) removed entirely per request — the skill now produces only 3 files (PRD, TODO, Implementation Prompt). The `references/uiux-prompt-template.md` file was removed from the package.
-- **v1.1**: Restructured into progressive disclosure (concise SKILL.md + `references/`) to save context on trigger. Fixed 2 non-Indonesian character bugs that snuck in (in a Tier 3 interview example and the Appendix C intro, before Appendix C was removed). Max questions per call adjusted to match the actual user-question tool's schema (check before assuming fixed numbers).
-- **v1.0**: Initial version, single monolithic file (~1000 lines).
+- **v2.1**: Eliminated prototype/demo framing and enforced **Production-Grade Frontend with Realistic Synthetic Data**.
+  - Renamed Phase 1 in the Implementation Prompt from "Frontend Prototype (Mock Data)" to "Production-Grade Frontend (Realistic Synthetic Data)".
+  - Added strict zero-demo policy: banned all "Demo", "Demo Mode", "Preview", "Prototype", and "Mock Data" badges, banners, alerts, and watermarks.
+  - Mandated high-fidelity, domain-authentic synthetic records (paving over lazy placeholders like "Lorem ipsum" or "Product 1") and full client-side state interactivity (CRUD, search, filter, pagination).
+  - Added Hard Rule #11 in `SKILL.md` enforcing the zero-demo and realistic synthetic data standard.
+
+- **v2.0**: Changed the Implementation Prompt deliverable from an inline chat code block to a required `implementation_prompt.md` file saved alongside the PRD. The prompt remains self-contained and ready to copy into a coding agent.
+
+- **v1.9**: Hardened Mermaid validation after a repeated `erDiagram` parse failure. Malformed relationship examples are no longer placed inside Mermaid fences, one physical line per relationship is mandatory, same-entity dual-FK relationships require separate role-labeled lines, and a literal pre-save scan is required.
+- **v1.8**: Restructured the Implementation Prompt for clarity and copy-paste readiness, and enforced a strict no-chatter output rule. The new prompt template uses standard markdown (no excessive emojis inside the prompt), clear bracketed placeholders, and 8 distinct sections (Context, Tech Stack, Mission, Execution Mode, Working Principles, File Architecture, First Steps, Communication, Hard Limits, Optional Variations). The chat output rule now mandates: single code block, NO intro line, NO outro line, NO summary, NO usage tips. Optionally, a one-line PRD save confirmation may appear before the code block; nothing after it. New hard rule #6 in `SKILL.md` codifies this, and new rule #12 explicitly forbids saving the prompt as a file. `references/implementation-prompt-template.md` now includes a "Why this prompt is structured this way" agent reference section, a placeholder-to-source mapping table, and 10 mandatory rules.
+- **v1.7**: Added mandatory Mermaid `erDiagram` syntax validation. New section in `references/prd-format.md` covers the exact `ENTITY1 ||--o{ ENTITY2 : "label"` format, 5 common parse errors (label-between-entities, many-to-many without bridge table, entity names with spaces, reserved keywords, ghost entities), and a 7-point self-check checklist the agent MUST run before saving the PRD. New hard rule #11 in `SKILL.md` enforces this self-check.
+- **v1.6**: Simplified output — only 1 file (`[Project-Name]-PRD.md`) + 1 chat output (the Implementation Prompt as an inline code block, NOT a file). Removed the TODO List file entirely. The Implementation Prompt is now self-contained and no longer needs to sync task numbers with a separate TODO file. The frontend-first approval gate is preserved as a principle inside the prompt.
+- **v1.5**: Implementation Prompt explicitly defaults to **Full Autopilot** — auto-continues task after task without asking permission in between (progress reports = FYI, not confirmation requests). The only mandatory pause is the GATE at the end of Phase 1. Per-task confirmation (Pair Programming) is opt-in.
+- **v1.4**: TODO List & Implementation Prompt restructured into **2 phases** (Phase 1 Frontend-Only with mock data → User approval checkpoint → Phase 2 Backend). The Implementation Prompt had an explicit GATE forcing the agent to stop & request approval at the end of Phase 1 before starting Phase 2.
+- **v1.3**: UI/UX Reference brought back as an **interview sub-flow** (not a separate file). The user is asked whether they have a design reference; if not, 4 design system presets are offered. The result goes into PRD Section 7.
+- **v1.2**: UI/UX Reference Prompt (Appendix C) removed entirely — the skill produced 3 files (PRD, TODO, Implementation Prompt). The `uiux-prompt-template.md` was removed from the package.
+- **v1.1**: Restructured into progressive disclosure (concise SKILL.md + `references/`) to save context on trigger. Fixed 2 non-Indonesian character bugs. Max questions per call adjusted to match the user-question tool's actual schema.
+- **v1.0**: Initial monolithic version, single file (~1000 lines).

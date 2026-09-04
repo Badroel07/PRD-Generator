@@ -1,33 +1,34 @@
 # 📋 PRD Generator Skill
 
-> **Autonomous, battle-tested Product Requirements Document (PRD) generator with synchronized companion execution files (Sprint TODO + Full Autopilot Implementation Prompt) for AI Coding Agents.**
+> Automated, highly structured Product Requirements Document (PRD) generator plus a self-contained `implementation_prompt.md` for AI Coding Agents.
 
-[![Skill Version](https://img.shields.io/badge/version-1.5-blue.svg)](SKILL.md)
+[![Skill Version](https://img.shields.io/badge/version-2.1-blue.svg)](SKILL.md)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Compatible With](https://img.shields.io/badge/AI%20Agents-Antigravity%20%7C%20Claude%20Code%20%7C%20Cursor%20%7C%20Mavis-purple.svg)](#)
 
 ---
 
 ## 🌟 Overview
 
-**PRD Generator** transforms raw product ideas and rough concepts into production-ready software specifications. Built specifically for agentic development workflows, it enforces a **mandatory Pre-Planning Interview** to eliminate ambiguity upfront, then generates **3 tightly synchronized markdown documents**.
+**PRD Generator** is a specialized skill designed for modern AI Coding Assistants (Google Antigravity, Claude Code, Cursor, Mavis, etc.) that turns product concepts into production-ready specifications.
 
-Whether building web apps, mobile apps, SaaS platforms, or internal tools, this skill gives your coding agents an unambiguous blueprint to execute without getting stuck in assumption loops.
+It enforces a **mandatory Pre-Planning Interview** to eliminate ambiguity before writing, then produces a PRD file and a copyable `implementation_prompt.md` file.
 
 ---
 
-## 📦 Synchronized Output Deliverables
+## 📦 Output Deliverables (2 Files)
 
-Every generation run produces up to 3 synchronized markdown files in your project directory:
+Every execution produces:
 
-| File | Purpose | Scope & Features |
-| :--- | :--- | :--- |
-| **`[Project-Name]-PRD.md`** | **Complete 7-Section PRD** | Complete specification with problem context, user requirements, core MVP features, step-by-step user flows, Mermaid Architecture (`graph TD`), Mermaid Database Schema (`erDiagram`), and strict Design & Technical Constraints. |
-| **`[Project-Name]-TODO.md`** | **2-Phase Task Checklist** | 15–30 granular, actionable tasks divided into **Phase 1: Frontend Prototype (Mock Data)** and **Phase 2: Backend Integration**, separated by a mandatory user approval gate. |
-| **`[Project-Name]-IMPLEMENTATION-PROMPT.md`** | **Full Autopilot Agent Prompt** | Standalone, self-contained prompt optimized for AI agents (Antigravity, Claude Code, Cursor). Runs autonomously across tasks with an explicit stop-and-wait gate between Phase 1 and Phase 2. |
+| Output | Type | Purpose | Mandatory? |
+| :--- | :--- | :--- | :--- |
+| **`[Project-Name]-PRD.md`** | **File** (saved to disk) | Complete 7-section PRD (Overview, Requirements, Core Features, User Flow, Mermaid Architecture `graph TD`, Mermaid Database Schema `erDiagram`, Design & Technical Constraints) | ✅ Always |
+| **`implementation_prompt.md`** | **File** (saved beside the PRD) | Self-contained execution prompt ready to paste into coding agents (Antigravity, Claude Code, Cursor). Defaults to Full Autopilot with a single approval gate after the production-grade frontend (with realistic synthetic data) is ready | ✅ Technical Projects |
 
 > [!IMPORTANT]
-> **Task Number Synchronization**: Task IDs in `[Project-Name]-TODO.md` strictly map 1-to-1 with the step references in `[Project-Name]-IMPLEMENTATION-PROMPT.md`.
+> **Prompt file**: The Implementation Prompt is always saved as `implementation_prompt.md` in the same directory as the PRD. The file contains only the completed, ready-to-paste prompt.
+
+> [!NOTE]
+> **UI/UX Design Spec**: There is no separate UI/UX Prompt file. For projects with a UI, the design system is gathered during the Tier 3 interview (user's own reference, or 4 curated presets from `references/design-system-presets.md`) and embedded directly into PRD Section 7.
 
 ---
 
@@ -35,114 +36,112 @@ Every generation run produces up to 3 synchronized markdown files in your projec
 
 ```mermaid
 graph TD
-    A["User Trigger (/prd, prompt)"] --> B["Stage 0: Pre-Planning Interview"]
-    B -->|"Looping structured questions (Tiers 1-4)"| B
-    B -->|"Ambiguity resolved or user opt-out"| C["Assumption Summary & Final Confirmation"]
-    C --> D["Stage 1: Generate PRD.md (7 Sections)"]
-    D --> E["Stage 2: Generate TODO.md & IMPLEMENTATION-PROMPT.md"]
-    E --> F["Summary Report & Sprint Breakdown"]
+    A["User Trigger (/prd)"] --> B["Stage 0: Pre-Planning Interview"]
+    B -->|"Looping structured questions"| B
+    B -->|"Ambiguity cleared or opt-out"| C["Assumption Summary & Final Confirmation"]
+    C --> D["Stage 1: Generate PRD (7 Sections) — saved to [Project-Name]-PRD.md"]
+    D --> E["Stage 1.5: Save implementation_prompt.md beside the PRD"]
+    E --> F["Output Summary"]
 ```
 
-### 1. 🚦 Stage 0: Pre-Planning Interview (Mandatory)
-Before generating any specifications, the skill runs an interactive interview using structured question tools (`ask_user` / `ask_question`) to eliminate planning gaps across 4 tiers:
+### 1. 🚦 Stage 0: Pre-Planning Interview
+- Eliminates guesswork before generating documents.
+- Uses structured user questioning tools (`ask_user` / `ask_question`).
+- **4 Progressive Question Tiers**:
+  - **Tier 1**: Product Identity & Scope (Product name, target platform, domain, roles, output language).
+  - **Tier 2**: Features & Business Logic (MVP scope, out-of-scope items, custom workflows/rules).
+  - **Tier 3**: Tech Stack & UI References (Frameworks, DB, auth methods, design systems, external APIs).
+  - **Tier 4**: Non-Functional Requirements (Scale, compliance, multi-tenancy, i18n, notifications).
+- Loops until planning is unambiguous or the user explicitly opts out (`"skip interview"`, `"just generate"`).
 
-- **Tier 1: Product Identity & Scope** — App name, platform (web/mobile/CLI/API), target users, roles/permissions, output language.
-- **Tier 2: Features & Business Logic** — MVP core scope, out-of-scope boundaries, business rules, edge cases.
-- **Tier 3: Tech Stack & UI Reference** — Frameworks, database, auth method, API dependencies, design system reference.
-- **Tier 4: Non-Functional Requirements** — Scale, compliance, performance, localization, notification channels.
+### 2. 🧱 Stage 1: Standard 7-Section PRD (saved as a file)
+1. **Overview** — Problem context & primary objective.
+2. **Requirements** — Accessibility, user personas, input data formats, notification flows.
+3. **Core Features** — Detailed MVP feature scope.
+4. **User Flow** — Step-by-step user journey.
+5. **Architecture** — System architecture with Mermaid diagram (`graph TD`).
+6. **Database Schema** — Relational schema with Mermaid diagram (`erDiagram`).
+7. **Design & Technical Constraints** — Strict typography, color systems, layout, and framework rules.
 
-### 2. 🎨 UI/UX Design System Presets (Embedded in PRD Section 7)
-If the project has a user interface and the user has no pre-existing design reference, the interview presents 4 curated design system presets:
-
-| Preset | Ideal For | Key Tokens & Aesthetics |
-| :--- | :--- | :--- |
-| **1. Modern Minimalist** | SaaS, admin dashboards, productivity tools | `Inter`/`Geist Sans`, `JetBrains Mono`, near-black `#18181B`, accent blue `#3B82F6`, `rounded-md`, clean whitespace. |
-| **2. Bold & Friendly** | Consumer apps, startups, community platforms | `Plus Jakarta Sans`/`Poppins`, purple `#7C3AED`, warm orange `#F59E0B`, `rounded-xl`, vibrant card styling. |
-| **3. Corporate & Formal** | Enterprise software, fintech, internal tools | `IBM Plex Sans`, navy `#1E3A5F`, slate accent `#64748B`, `rounded-sm`, dense tabular data layouts. |
-| **4. Dark Tech** | Developer tools, cloud monitoring, cybersecurity | `Geist Sans`, `JetBrains Mono`, dark base `#0A0A0B`, neon cyan `#22D3EE` / lime accents, subtle glow borders. |
-
-### 3. 🧱 Stage 1: Standard 7-Section PRD
-1. **Overview** — Problem statement, target audience, and primary objectives.
-2. **Requirements** — Accessibility standards, user personas, input data formats, notification flows.
-3. **Core Features** — Detailed functional breakdown of MVP capabilities.
-4. **User Flow** — Chronological user journey and interaction steps.
-5. **Architecture** — High-level architecture with Mermaid diagram (`graph TD`).
-6. **Database Schema** — Entity-Relationship model with Mermaid diagram (`erDiagram`).
-7. **Design & Technical Constraints** — Framework selection, typography, color palettes, responsive layouts, and performance rules.
-
-### 4. 🧩 Stage 2: 2-Phase Execution & Full Autopilot
-- **Phase 1: Frontend-Only Prototype (Mock Data)** — Build interactive screens, components, mock data stores, and client-side flows for rapid visual validation.
-- **GATE: User Approval Checkpoint** — The agent stops, presents the working prototype, and requests confirmation before proceeding.
-- **Phase 2: Backend Integration & Hardening** — Real database schemas, migrations, authentication, API endpoints, error handling, and end-to-end tests.
-- **Full Autopilot Execution** — The Implementation Prompt instructs coding agents to work continuously without per-task micromanagement unless pair programming mode is explicitly requested.
+### 3. 🧩 Stage 1.5: Implementation Prompt File
+- A self-contained prompt saved as `implementation_prompt.md` beside the PRD.
+- Enforces **Phase 1: Production-Grade Frontend with Realistic Synthetic Data** — finished-quality UI/UX, authentic domain-accurate data, full client-side state interactivity (CRUD, search, filter, pagination), and a strict ban on any "demo/prototype" badges, watermarks, or gimmicks.
+- Contains tech stack, working principles, execution mode (Full Autopilot by default), and the mandatory approval gate after Phase 1 is built and committed.
+- Ready to copy-paste into a coding agent to execute the PRD.
 
 ---
 
 ## 🚀 Triggers & Usage
 
-Activate this skill by typing any of the following slash commands or prompts in your AI assistant:
+Activate this skill by typing any of the following in your AI assistant prompt:
 
 ### Slash Commands
-```text
-/prd
-/prd-generator
-/generate-prd
-/buat-prd
-```
+- `/prd`
+- `/prd-generator`
+- `/generate-prd`
+- `/buat-prd`
 
-### Natural Language Examples
-```text
-"Generate a PRD for a multi-tenant SaaS invoicing platform with Stripe billing"
-"Buatkan PRD dan implementation prompt untuk aplikasi manajemen inventaris gudang"
-"Create a comprehensive PRD and 2-phase TODO list for an AI recipe generator"
-```
+### Natural Language
+- *"generate a PRD for an e-commerce app..."*
+- *"build a PRD and implementation prompt for..."*
+- *"create a PRD for an inventory management system"*
+- *"design prompt and PRD for..."*
 
 ---
 
 ## 📂 Repository Structure
 
-Built with a **progressive disclosure** architecture to preserve agent token budget:
+The skill is built using a **progressive disclosure** architecture to optimize LLM context usage:
 
-```text
+```
 prd-generator/
-├── SKILL.md                                    # Main orchestrator & routing instructions
-├── README.md                                   # Complete skill documentation & guide
-├── prd-generator.skill                         # Packaged bundle for distribution
+├── SKILL.md                                    # Main orchestrator & routing layer
+├── README.md                                   # Documentation & usage guide
+├── prd-generator.skill                         # Compiled skill package for distribution
 └── references/
-    ├── interview-guide.md                      # Stage 0: 4-tier interview guide & question taxonomy
+    ├── interview-guide.md                      # Stage 0: Pre-planning interview guide & tier taxonomy
     ├── prd-format.md                           # Stage 1: 7-section PRD markdown template & Mermaid specs
-    ├── todo-template.md                        # Stage 2: 2-phase sprint checklist template (Appendix A)
-    ├── implementation-prompt-template.md       # Stage 2: Full autopilot coding prompt (Appendix B)
-    └── design-system-presets.md                # 4 ready-to-use UI/UX design presets for Section 7
+    ├── implementation-prompt-template.md       # Stage 1.5: Implementation prompt file template
+    └── design-system-presets.md                # Stage 0: 4 ready-to-use UI/UX design system presets
 ```
 
 ---
 
-## ⚙️ Conditional Logic & Skips
+## ⚙️ Conditional Skips
 
-- **Non-Technical Projects**: If generating a PRD for standard operating procedures (SOP), business logic, or marketing operations, the skill skips the Implementation Prompt.
-- **No-Backend / API-Only Projects**: If the project has no custom backend (e.g. consuming an existing third-party API), the 2-phase split converts into a single linear priority backlog.
+- **Skip Implementation Prompt**: Only when building non-technical projects (SOP, business process, content marketing) or explicitly requested.
 
 ---
 
 ## 🌐 Language Conventions
 
-- **Default Language**: English for all documentation, specs, user flows, and checklists (unless Bahasa Indonesia or another language is explicitly requested during Tier 1 interview).
-- **Code Identifiers**: Always English for variable names, database tables/columns, route paths, CLI commands, and code blocks.
+- **Default Output**: English for descriptions, specifications, workflows, and explanations.
+- **Code & Technical Names**: English for variables, database column/table names, directory paths, CLI commands, and code snippets.
 
 ---
 
 ## 📝 Changelog
 
-- **v1.5**: Defaulted Implementation Prompt to **Full Autopilot** mode (agent continuously progresses without per-step interruptions; single mandatory stop gate at the end of Phase 1).
-- **v1.4**: Restructured execution into **2-Phase Architecture** (Phase 1 Frontend Prototype with mock data → User Approval Gate → Phase 2 Backend Integration).
-- **v1.3**: Integrated **UI/UX Design Presets** into Pre-Planning Interview & PRD Section 7 (eliminating separate UI/UX file overhead).
-- **v1.2**: Consolidated deliverable output to **3 synchronized markdown files** (PRD, TODO, Implementation Prompt).
-- **v1.1**: Re-architected with **Progressive Disclosure** (clean `SKILL.md` orchestrator + detailed `references/` files).
-- **v1.0**: Initial monolithic release.
+- **v2.1**: Eliminated prototype/demo framing and enforced **Production-Grade Frontend with Realistic Synthetic Data**.
+  - Renamed Phase 1 in the Implementation Prompt from "Frontend Prototype (Mock Data)" to "Production-Grade Frontend (Realistic Synthetic Data)".
+  - Added strict zero-demo policy: banned all "Demo", "Demo Mode", "Preview", "Prototype", and "Mock Data" badges, banners, alerts, and watermarks.
+  - Mandated high-fidelity, domain-authentic synthetic records (prohibiting lazy placeholders like "Lorem ipsum" or "Product 1") and full client-side state interactivity (CRUD, search, filter, pagination).
+  - Added Hard Rule #11 in `SKILL.md` enforcing the zero-demo and realistic synthetic data standard.
+
+- **v2.0**: Changed the Implementation Prompt deliverable from inline chat output to the required `implementation_prompt.md` file, saved alongside the PRD.
+
+- **v1.8**: Restructured the Implementation Prompt for clarity and copy-paste readiness, and enforced a strict no-chatter output rule. The new prompt template uses standard markdown (no excessive emojis inside the prompt), clear bracketed placeholders, and 8 distinct sections (Context, Tech Stack, Mission, Execution Mode, Working Principles, File Architecture, First Steps, Communication, Hard Limits, Optional Variations). The chat output rule now mandates: single code block, NO intro line, NO outro text, NO summary, NO usage tips. Optionally, a one-line PRD save confirmation may appear before the code block; nothing after it. New hard rule #6 in `SKILL.md` codifies this, and new rule #12 explicitly forbids saving the prompt as a file.
+- **v1.7**: Added mandatory Mermaid `erDiagram` syntax validation. New section in `references/prd-format.md` covers the exact `ENTITY1 ||--o{ ENTITY2 : "label"` format, 5 common parse errors (label-between-entities, many-to-many without bridge table, entity names with spaces, reserved keywords, ghost entities), and a 7-point self-check checklist the agent MUST run before saving the PRD. New hard rule #11 in `SKILL.md` enforces this self-check.
+- **v1.6**: Simplified output — only 1 file (`[Project-Name]-PRD.md`) + 1 chat output (the Implementation Prompt as an inline code block, NOT a file). Removed the TODO List file entirely. The Implementation Prompt is now self-contained and no longer syncs task numbers with a separate TODO file. Frontend-first approval gate preserved as a principle inside the prompt.
+- **v1.5**: Implementation Prompt explicitly defaults to **Full Autopilot** — auto-continues task after task without asking permission in between. Progress reports are FYI, not confirmation requests. The only mandatory pause is the GATE after the frontend prototype is ready for review. Per-task confirmation (Pair Programming) is now opt-in.
+- **v1.4**: TODO List & Implementation Prompt restructured into **2 phases** (Phase 1 Frontend-Only with mock data → User approval checkpoint → Phase 2 Backend). The Implementation Prompt had an explicit GATE forcing the agent to stop & request approval at the end of Phase 1 before starting Phase 2.
+- **v1.3**: UI/UX Reference brought back as an **interview sub-flow** (not a separate file). The user is asked whether they have a design reference; if not, 4 design system presets are offered. The result goes into PRD Section 7.
+- **v1.2**: UI/UX Reference Prompt (Appendix C) removed entirely — the skill produced 3 files (PRD, TODO, Implementation Prompt). The `uiux-prompt-template.md` was removed from the package.
+- **v1.1**: Restructured into progressive disclosure (concise SKILL.md + `references/`) to save context on trigger. Fixed 2 non-Indonesian character bugs. Max questions per call adjusted to match the user-question tool's actual schema.
+- **v1.0**: Initial monolithic version, single file (~1000 lines).
 
 ---
 
 ## 📄 License
 
-MIT License. Free to use, modify, and distribute for personal and commercial AI agent workflows.
+MIT License. Feel free to use, modify, and distribute for your own projects and agent setups.

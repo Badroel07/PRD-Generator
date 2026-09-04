@@ -188,6 +188,6 @@ Generate with this info? (Yes / No, want to change something)
 
 *(user answers Yes)*
 
-**Agent → Stage 1**: Generate 3 files (PRD, TODO, Implementation Prompt) + a "Notes & Assumptions" section in the PRD listing all the assumptions above.
+**Agent → Stage 1**: Save the `[Project-Name]-PRD.md` file and `implementation_prompt.md` beside it, plus a "Notes & Assumptions" section in the PRD listing all the assumptions above.
 
 ---
